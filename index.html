@@ -17,6 +17,54 @@
 <script>
 const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
 
+const cities = [];
+
+fetch(endpoint) //built in api, returns promise
+    .then(res => res.json()) //parsing json returns a second promise
+    .then(data => cities.push(...data)); //ES6 'spread' -> otherwise pushing to array create separate object in new array
+
+function findMatches(wordToMatch, cities) {
+    return cities.filter(place => {
+        //figure out if city/state matches search
+        const regex = new RegExp(wordToMatch, 'gi'); //g looks globally, i is case instensitive 
+        return place.city.match(regex) || place.state.match(regex)
+    })
+}
+
+//adds commas to numbers
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+
+function displayMatches() {
+    //console.log(this.value);
+    const matchArray = findMatches(this.value, cities);
+    const html = matchArray.map(place => {
+        //create a regex to match city name, then replace with <span> of search term
+        const regex = new RegExp(this.value, 'gi');
+        const cityName = place.city.replace(regex, `<span class="marker">${this.value}</span>`);
+        const stateName = place.state.replace(regex, `<span class="marker">${this.value}</span>`);
+
+        return `
+        <li>
+            <span class="name">${cityName}, ${stateName}</span>
+            <span class="name">${numberWithCommas(place.population)}</span>
+        </li>
+        `;
+    }).join(''); //.map() returns an array, not a string, so we use .join() to combine data
+    suggestions.innerHTML = html;
+    //console.log(matchArray);
+}
+
+const searchInput = document.querySelector('.search');
+const suggestions = document.querySelector('.suggestions');
+
+searchInput.addEventListener('change', displayMatches);
+//only listens on event click-off, keyup listens for changes at end of keypress
+searchInput.addEventListener('keyup', displayMatches);
+
+
 </script>
 </body>
-</html>
+</html> 
